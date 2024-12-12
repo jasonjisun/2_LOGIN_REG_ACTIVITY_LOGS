@@ -4,7 +4,7 @@ require_once 'dbConfig.php';
 // Helper function to log activity
 // Log activity function
 function logActivity($pdo, $userId, $actionType, $details) {
-    $stmt = $pdo->prepare("INSERT INTO activity_logs (user_id, action_type, details) VALUES (:user_id, :action_type, :details)");
+    $stmt = $pdo->prepare("INSERT INTO activity_logs (user_id, action_type, details, timestamp) VALUES (:user_id, :action_type, :details, NOW())");
     $stmt->bindParam(':user_id', $userId);
     $stmt->bindParam(':action_type', $actionType);
     $stmt->bindParam(':details', $details);
@@ -70,23 +70,8 @@ function createApplicant($pdo, $first_name, $last_name, $email, $subjects, $year
 
 
 // Update applicant
-// Function to update applicant details
 function updateApplicant($pdo, $id, $first_name, $last_name, $email, $subjects, $years_of_experience, $education, $skills, $user_id) {
-    // SQL query to update the applicant
-    $query = "UPDATE applicants SET 
-              first_name = :first_name,
-              last_name = :last_name,
-              email = :email,
-              subjects = :subjects,
-              years_of_experience = :years_of_experience,
-              education = :education,
-              skills = :skills
-              WHERE id = :id";
-
-    // Prepare the statement
-    $stmt = $pdo->prepare($query);
-
-    // Bind parameters
+    $stmt = $pdo->prepare("UPDATE applicants SET first_name = :first_name, last_name = :last_name, email = :email, subjects = :subjects, years_of_experience = :years_of_experience, education = :education, skills = :skills WHERE id = :id");
     $stmt->bindParam(':first_name', $first_name);
     $stmt->bindParam(':last_name', $last_name);
     $stmt->bindParam(':email', $email);
@@ -95,14 +80,19 @@ function updateApplicant($pdo, $id, $first_name, $last_name, $email, $subjects, 
     $stmt->bindParam(':education', $education);
     $stmt->bindParam(':skills', $skills);
     $stmt->bindParam(':id', $id);
-
-    // Execute the statement
     $stmt->execute();
-
-    // Log the action
-    logActivity($pdo, $user_id, 'UPDATE', "Updated applicant with ID $id");
+    
+    // Optionally log the activity of the update
+    logActivity($pdo, $user_id, 'Update Applicant', "Updated applicant with ID: $id");
 }
 
+function getApplicantById($pdo, $id) {
+    $stmt = $pdo->prepare("SELECT * FROM applicants WHERE id = :id");
+    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+    $stmt->execute();
+    
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
 
 // core/models.php
 
